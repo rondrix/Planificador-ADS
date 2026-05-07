@@ -32,14 +32,44 @@ export const AdminPanel = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSave = () => {
-    if (editingId) {
-      updatePost(editingId, formData);
-      setEditingId(null);
-    } else {
-      addPost(formData);
+  const handleImageUpload = (e, field) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          // Resize the image to avoid localStorage limits (max width/height 800px)
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const MAX_SIZE = 800;
+
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Compress as JPEG (0.7 quality)
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          setFormData(prev => ({ ...prev, [field]: dataUrl }));
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
     }
-    setFormData(defaultPost);
   };
 
   const handleChange = (e) => {
@@ -54,14 +84,17 @@ export const AdminPanel = () => {
     updateCampaign({ [e.target.name]: e.target.value });
   };
 
-  const handleImageUpload = (e, field) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, [field]: reader.result }));
-      };
-      reader.readAsDataURL(file);
+  const handleSave = () => {
+    try {
+      if (editingId) {
+        updatePost(editingId, formData);
+        setEditingId(null);
+      } else {
+        addPost(formData);
+      }
+      setFormData(defaultPost);
+    } catch (error) {
+      alert("Error al guardar: " + error.message + ". Es posible que hayas excedido el límite de almacenamiento local. Prueba subir imágenes más pequeñas.");
     }
   };
 
