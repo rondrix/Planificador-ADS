@@ -6,6 +6,7 @@ export const InstagramCard = ({ post }) => {
 
   const formats = [
     ...(post.isPost ? ['Post 4:5'] : []),
+    ...(post.isCarousel ? ['Carrusel'] : []),
     ...(post.isStory ? ['Story H 9:16'] : []),
     ...(post.isAd ? ['Ad 1:1'] : []),
     ...(post.isOrganic ? ['Orgánico'] : [])
@@ -32,9 +33,15 @@ export const InstagramCard = ({ post }) => {
       </div>
 
       {/* Image Wrap */}
-      <div className="relative w-full shrink-0">
+      <div className="relative w-full shrink-0 bg-gray-100">
         {post.isAd && showAd ? (
           <img className="block w-full h-auto aspect-square object-cover" src={post.adImageUrl || 'https://placehold.co/1080x1080/0D1B4B/C8A951?text=Ad+Image'} alt="Ad" />
+        ) : post.isCarousel && post.carouselImages && post.carouselImages.length > 0 ? (
+          <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide w-full h-auto aspect-[4/5]">
+            {post.carouselImages.map((imgSrc, idx) => (
+              <img key={idx} className="block shrink-0 w-full h-full snap-center object-cover" src={imgSrc} alt={`Carousel ${idx+1}`} />
+            ))}
+          </div>
         ) : (
           <img className="block w-full h-auto aspect-[4/5] object-cover" src={post.mainImageUrl || 'https://placehold.co/1080x1350/0D1B4B/C8A951?text=Main+Image'} alt="Main" />
         )}
@@ -87,7 +94,7 @@ export const InstagramCard = ({ post }) => {
       {/* Formats */}
       <div className="flex gap-1.5 flex-wrap px-3 pb-3 shrink-0 mt-auto">
         {formats.map((fmt, i) => (
-          <span key={i} className={`text-[9px] font-bold py-0.5 px-2 rounded-full text-white tracking-wide uppercase ${fmt.includes('Post') ? 'bg-[#1a6b3c]' : fmt.includes('Story') ? 'bg-[#1b6fa8]' : fmt.includes('Ad') ? 'bg-[#8b4513]' : 'bg-[#6b7280]'}`}>
+          <span key={i} className={`text-[9px] font-bold py-0.5 px-2 rounded-full text-white tracking-wide uppercase ${fmt.includes('Post') ? 'bg-[#1a6b3c]' : fmt.includes('Carrusel') ? 'bg-[#5b21b6]' : fmt.includes('Story') ? 'bg-[#1b6fa8]' : fmt.includes('Ad') ? 'bg-[#8b4513]' : 'bg-[#6b7280]'}`}>
             {fmt}
           </span>
         ))}
