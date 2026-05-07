@@ -167,17 +167,34 @@ export const AdminPanel = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold mb-1">Imagen Principal</label>
-                  <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'mainImageUrl')} className="w-full text-xs" />
-                  {formData.mainImageUrl && <img src={formData.mainImageUrl} alt="preview" className="h-16 mt-2 object-contain rounded border bg-gray-100" />}
+                  <label className="block text-xs font-semibold mb-2">Imagen Principal</label>
+                  <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <div className="flex flex-col items-center justify-center pt-4 pb-3">
+                      <svg className="w-6 h-6 mb-1 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                          <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                      </svg>
+                      <p className="text-xs text-gray-600 font-semibold">Clic para subir imagen</p>
+                    </div>
+                    <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'mainImageUrl')} className="hidden" />
+                  </label>
+                  {formData.mainImageUrl && <img src={formData.mainImageUrl} alt="preview" className="h-20 w-full mt-2 object-contain rounded-lg border border-gray-200 bg-gray-100" />}
                 </div>
+                
                 {formData.isAd && (
                   <div>
-                    <label className="block text-xs font-semibold mb-1">Imagen Pauta (Ad)</label>
-                    <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'adImageUrl')} className="w-full text-xs" />
-                    {formData.adImageUrl && <img src={formData.adImageUrl} alt="preview" className="h-16 mt-2 object-contain rounded border bg-gray-100" />}
+                    <label className="block text-xs font-semibold mb-2">Imagen Pauta (Ad)</label>
+                    <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-yellow-300 border-dashed rounded-lg cursor-pointer bg-yellow-50 hover:bg-yellow-100 transition-colors">
+                      <div className="flex flex-col items-center justify-center pt-4 pb-3">
+                        <svg className="w-6 h-6 mb-1 text-yellow-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                        </svg>
+                        <p className="text-xs text-yellow-700 font-semibold">Subir imagen Ad</p>
+                      </div>
+                      <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'adImageUrl')} className="hidden" />
+                    </label>
+                    {formData.adImageUrl && <img src={formData.adImageUrl} alt="preview" className="h-20 w-full mt-2 object-contain rounded-lg border border-gray-200 bg-yellow-50" />}
                   </div>
                 )}
               </div>
