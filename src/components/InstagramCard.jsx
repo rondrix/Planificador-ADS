@@ -3,6 +3,7 @@ import { Icon } from '@iconify/react';
 
 export const InstagramCard = ({ post }) => {
   const [copied, setCopied] = useState(false);
+  const [activeSlide, setActiveSlide] = useState(0);
 
   const formats = [
     ...(post.isPost ? ['Post 4:5'] : []),
@@ -20,6 +21,14 @@ export const InstagramCard = ({ post }) => {
     } catch (error) {
       console.error('No se pudo copiar el texto', error);
     }
+  };
+
+  const goToPreviousSlide = () => {
+    setActiveSlide((current) => (current === 0 ? post.carouselImages.length - 1 : current - 1));
+  };
+
+  const goToNextSlide = () => {
+    setActiveSlide((current) => (current === post.carouselImages.length - 1 ? 0 : current + 1));
   };
 
   return (
@@ -45,18 +54,52 @@ export const InstagramCard = ({ post }) => {
       <div className="relative w-full shrink-0 bg-gray-100">
         {post.isCarousel ? (
           <>
-            <div className="flex overflow-x-auto snap-x snap-mandatory w-full aspect-[4/5]">
-              {post.carouselImages.map((imgSrc, idx) => (
-                <img
-                  key={imgSrc}
-                  className="block shrink-0 w-full h-full snap-center object-cover"
-                  src={imgSrc}
-                  alt={`${post.title} slide ${idx + 1}`}
-                />
-              ))}
+            <div className="overflow-hidden w-full aspect-[4/5]">
+              <div
+                className="flex h-full transition-transform duration-300 ease-out"
+                style={{ transform: `translateX(-${activeSlide * 100}%)` }}
+              >
+                {post.carouselImages.map((imgSrc, idx) => (
+                  <img
+                    key={imgSrc}
+                    className="block shrink-0 w-full h-full object-cover"
+                    src={imgSrc}
+                    alt={`${post.title} slide ${idx + 1}`}
+                  />
+                ))}
+              </div>
             </div>
             <div className="absolute top-2 right-2 bg-black/65 text-white text-[10px] font-bold rounded-full px-2 py-1">
-              1/{post.carouselImages.length}
+              {activeSlide + 1}/{post.carouselImages.length}
+            </div>
+            <button
+              type="button"
+              onClick={goToPreviousSlide}
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/55 hover:bg-black/70 text-white flex items-center justify-center transition-colors"
+              aria-label="Imagen anterior"
+            >
+              <Icon icon="ph:caret-left-bold" className="text-lg" />
+            </button>
+            <button
+              type="button"
+              onClick={goToNextSlide}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/55 hover:bg-black/70 text-white flex items-center justify-center transition-colors"
+              aria-label="Imagen siguiente"
+            >
+              <Icon icon="ph:caret-right-bold" className="text-lg" />
+            </button>
+            <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
+              {post.carouselImages.map((imgSrc, idx) => (
+                <button
+                  key={imgSrc}
+                  type="button"
+                  onClick={() => setActiveSlide(idx)}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    activeSlide === idx ? 'bg-white' : 'bg-white/45 hover:bg-white/75'
+                  }`}
+                  aria-label={`Ver imagen ${idx + 1}`}
+                />
+              ))}
             </div>
           </>
         ) : (
