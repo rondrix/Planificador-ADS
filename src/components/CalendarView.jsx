@@ -1,97 +1,155 @@
 import React from 'react';
-import { useData } from '../context/DataContext';
+import { Link, useParams } from 'react-router-dom';
+import { Icon } from '@iconify/react';
 import { InstagramCard } from './InstagramCard';
-import { Link } from 'react-router-dom';
+import { getMonthBySlug } from '../data/contentLoader';
+
+const getWeekKey = (dateValue) => {
+  const date = new Date(`${dateValue}T12:00:00`);
+  const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+  return Math.ceil((date.getDate() + firstDay.getDay()) / 7);
+};
+
+const groupPostsByWeek = (posts) => {
+  return posts.reduce((weeks, post) => {
+    const weekNumber = getWeekKey(post.date);
+    const existing = weeks.find((week) => week.weekNumber === weekNumber);
+
+    if (existing) {
+      existing.posts.push(post);
+      return weeks;
+    }
+
+    return [...weeks, { weekNumber, posts: [post] }];
+  }, []);
+};
 
 export const CalendarView = () => {
-  const { posts, campaign } = useData();
+  const { monthSlug } = useParams();
+  const month = getMonthBySlug(monthSlug);
 
-  // Group posts by week (mock simple logic, just breaking by chunks of 4 for demo)
-  // Real implementation might group by actual date ranges
-  const weeks = [];
-  for (let i = 0; i < posts.length; i += 4) {
-    weeks.push(posts.slice(i, i + 4));
+  if (!month) {
+    return (
+      <div className="min-h-screen bg-light flex items-center justify-center px-5">
+        <div className="bg-white border border-[#D8E2F0] rounded-lg p-8 text-center max-w-md">
+          <Icon icon="ph:calendar-x" className="text-4xl text-gold mx-auto mb-3" />
+          <h1 className="font-montserrat text-2xl font-extrabold text-navy m-0">Mes no disponible</h1>
+          <p className="text-sm text-[#60708F] mt-2 mb-5">Solo se muestran las carpetas que existen en contenidos.</p>
+          <Link to="/" className="inline-flex items-center gap-2 bg-navy text-white px-4 py-2 rounded-md text-sm font-bold">
+            <Icon icon="ph:arrow-left" />
+            Volver a meses
+          </Link>
+        </div>
+      </div>
+    );
   }
 
-  const totalPosts = posts.length;
-  const totalWeeks = weeks.length;
-  const formatsCount = 3; // Mocked stat
-  const totalFiles = posts.reduce((acc, p) => acc + (p.isPost?1:0) + (p.isStory?1:0) + (p.isAd?2:0), 0);
+  const weeks = groupPostsByWeek(month.posts);
+  const totalPosts = month.posts.length;
+  const totalCarousels = month.posts.filter((post) => post.isCarousel).length;
+  const totalFiles = month.posts.reduce((acc, post) => acc + post.fileNames.length, 0);
 
   return (
-    <div className="font-sans min-h-screen pb-10">
+    <div className="font-sans min-h-screen pb-10 bg-light">
       <header className="bg-navy text-white text-center pt-[38px] px-5 pb-[30px] relative before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[5px] before:bg-gold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[5px] after:bg-gold">
-        <div className="text-[10px] font-bold tracking-[5px] text-gold uppercase mb-2">Vidrios ASD</div>
-        <h1 className="font-montserrat text-[32px] font-extrabold m-0">Calendario de <span className="text-gold">Publicación</span></h1>
-        <p className="text-[13px] text-[#A8BFDC] mt-2 m-0">{campaign.title} &nbsp;·&nbsp; {campaign.subtitle}</p>
-        
-        <div className="flex justify-center gap-9 mt-5 flex-wrap">
-          <div className="text-center"><span className="block text-[26px] font-extrabold text-gold">{totalPosts}</span><span className="text-[10px] text-[#A8BFDC] tracking-[1px] uppercase">Publicaciones</span></div>
-          <div className="text-center"><span className="block text-[26px] font-extrabold text-gold">{totalWeeks}</span><span className="text-[10px] text-[#A8BFDC] tracking-[1px] uppercase">Semanas</span></div>
-          <div className="text-center"><span className="block text-[26px] font-extrabold text-gold">{totalFiles}</span><span className="text-[10px] text-[#A8BFDC] tracking-[1px] uppercase">Archivos</span></div>
-          <div className="text-center"><span className="block text-[26px] font-extrabold text-gold">{formatsCount}</span><span className="text-[10px] text-[#A8BFDC] tracking-[1px] uppercase">Formatos</span></div>
-        </div>
+        <Link
+          to="/"
+          className="absolute top-4 left-4 bg-white/10 text-white px-3 py-1.5 text-xs font-bold rounded-md hover:bg-white/20 transition-colors inline-flex items-center gap-1.5"
+        >
+          <Icon icon="ph:arrow-left" />
+          Meses
+        </Link>
 
-        <Link to="/admin" className="absolute top-4 right-4 bg-white text-navy px-3 py-1 text-xs font-bold rounded-md hover:bg-gray-100 transition-colors">Admin Panel</Link>
+        <div className="text-[10px] font-bold tracking-[5px] text-gold uppercase mb-2">Vidrios ASD</div>
+        <h1 className="font-montserrat text-[32px] font-extrabold m-0">
+          Calendario de <span className="text-gold">Publicación</span>
+        </h1>
+        <p className="text-[13px] text-[#A8BFDC] mt-2 m-0">
+          {month.title} &nbsp;·&nbsp; {month.subtitle}
+        </p>
+
+        <div className="flex justify-center gap-9 mt-5 flex-wrap">
+          <div className="text-center">
+            <span className="block text-[26px] font-extrabold text-gold">{totalPosts}</span>
+            <span className="text-[10px] text-[#A8BFDC] tracking-[1px] uppercase">Publicaciones</span>
+          </div>
+          <div className="text-center">
+            <span className="block text-[26px] font-extrabold text-gold">{weeks.length}</span>
+            <span className="text-[10px] text-[#A8BFDC] tracking-[1px] uppercase">Semanas</span>
+          </div>
+          <div className="text-center">
+            <span className="block text-[26px] font-extrabold text-gold">{totalFiles}</span>
+            <span className="text-[10px] text-[#A8BFDC] tracking-[1px] uppercase">Archivos</span>
+          </div>
+          <div className="text-center">
+            <span className="block text-[26px] font-extrabold text-gold">{totalCarousels}</span>
+            <span className="text-[10px] text-[#A8BFDC] tracking-[1px] uppercase">Carruseles</span>
+          </div>
+        </div>
       </header>
 
       <div className="flex justify-center gap-3.5 flex-wrap py-3 px-5 bg-white border-b-2 border-[#E2EAF5] text-[11.5px] font-semibold">
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-white bg-[#1A6B3C]"><span className="w-1.5 h-1.5 rounded-full bg-white/50"></span> Post · 1080×1350</span>
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-white bg-[#1B6FA8]"><span className="w-1.5 h-1.5 rounded-full bg-white/50"></span> Story H · 1080×1920</span>
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-white bg-[#8B4513]"><span className="w-1.5 h-1.5 rounded-full bg-white/50"></span> Ad · 1080×1080 — botón debajo</span>
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-white bg-[#1A6B3C]">
+          <span className="w-1.5 h-1.5 rounded-full bg-white/50"></span>
+          Post · 1080×1350
+        </span>
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-white bg-[#5B21B6]">
+          <span className="w-1.5 h-1.5 rounded-full bg-white/50"></span>
+          Carrusel · Secuencia
+        </span>
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-white bg-[#1B6FA8]">
+          <span className="w-1.5 h-1.5 rounded-full bg-white/50"></span>
+          Copy listo para copiar
+        </span>
       </div>
 
-      {weeks.length === 0 && (
-        <div className="text-center py-20 text-gray-500">
-          No hay publicaciones aún. <Link to="/admin" className="text-blue underline">Agrega una desde el Admin Panel</Link>.
-        </div>
-      )}
-
-      {weeks.map((weekPosts, index) => (
-        <section key={index} className="max-w-[1120px] mx-auto mt-7 px-4">
-          <div className="bg-navy text-white py-2.5 px-5 rounded-t-xl flex items-center justify-between border-l-[5px] border-gold">
-            <h2 className="font-montserrat text-base font-bold tracking-wide m-0">SEMANA {index + 1}</h2>
-            <span className="text-xs text-[#A8BFDC]">Fechas aprox.</span>
+      {weeks.map((week) => (
+        <section key={week.weekNumber} className="max-w-[1120px] mx-auto mt-7 px-4">
+          <div className="bg-navy text-white py-2.5 px-5 rounded-t-lg flex items-center justify-between border-l-[5px] border-gold">
+            <h2 className="font-montserrat text-base font-bold tracking-wide m-0">SEMANA {week.weekNumber}</h2>
+            <span className="text-xs text-[#A8BFDC]">{week.posts[0].dateShort} en adelante</span>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5 bg-[#DDE5F2] p-3.5 rounded-b-xl border border-t-0 border-[#C8D4E8]">
-            {weekPosts.map(post => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5 bg-[#DDE5F2] p-3.5 rounded-b-lg border border-t-0 border-[#C8D4E8]">
+            {week.posts.map((post) => (
               <InstagramCard key={post.id} post={post} />
             ))}
           </div>
         </section>
       ))}
-      
-      {weeks.length > 0 && (
-        <section className="max-w-[1120px] mx-auto mt-7 mb-12 px-4">
-          <h3 className="font-montserrat text-[15px] font-bold text-navy border-l-4 border-gold pl-3 mb-3.5">Archivos por contenido y formato</h3>
-          <div className="overflow-x-auto rounded-xl shadow-[0_2px_10px_rgba(13,27,75,0.07)]">
-            <table className="w-full border-collapse bg-white text-xs">
-              <thead>
-                <tr>
-                  <th className="bg-navy text-white px-3.5 py-2 text-left font-semibold text-[10.5px] tracking-wide uppercase">#</th>
-                  <th className="bg-navy text-white px-3.5 py-2 text-left font-semibold text-[10.5px] tracking-wide uppercase">Contenido</th>
-                  <th className="bg-navy text-white px-3.5 py-2 text-left font-semibold text-[10.5px] tracking-wide uppercase">Post 4:5</th>
-                  <th className="bg-navy text-white px-3.5 py-2 text-left font-semibold text-[10.5px] tracking-wide uppercase">Story H 9:16</th>
-                  <th className="bg-navy text-white px-3.5 py-2 text-left font-semibold text-[10.5px] tracking-wide uppercase">Ad 1:1</th>
-                  <th className="bg-navy text-white px-3.5 py-2 text-left font-semibold text-[10.5px] tracking-wide uppercase">Fecha</th>
+
+      <section className="max-w-[1120px] mx-auto mt-7 mb-12 px-4">
+        <h3 className="font-montserrat text-[15px] font-bold text-navy border-l-4 border-gold pl-3 mb-3.5">
+          Archivos por contenido
+        </h3>
+        <div className="overflow-x-auto rounded-lg shadow-[0_2px_10px_rgba(13,27,75,0.07)]">
+          <table className="w-full border-collapse bg-white text-xs">
+            <thead>
+              <tr>
+                <th className="bg-navy text-white px-3.5 py-2 text-left font-semibold text-[10.5px] tracking-wide uppercase">#</th>
+                <th className="bg-navy text-white px-3.5 py-2 text-left font-semibold text-[10.5px] tracking-wide uppercase">Contenido</th>
+                <th className="bg-navy text-white px-3.5 py-2 text-left font-semibold text-[10.5px] tracking-wide uppercase">Formato</th>
+                <th className="bg-navy text-white px-3.5 py-2 text-left font-semibold text-[10.5px] tracking-wide uppercase">Archivos</th>
+                <th className="bg-navy text-white px-3.5 py-2 text-left font-semibold text-[10.5px] tracking-wide uppercase">Fecha</th>
+              </tr>
+            </thead>
+            <tbody>
+              {month.posts.map((post) => (
+                <tr key={post.id} className="even:bg-[#F8FAFE]">
+                  <td className="px-3.5 py-2 border-b border-[#E2EAF5] text-[#2D3A5C]">{post.contentNumber}</td>
+                  <td className="px-3.5 py-2 border-b border-[#E2EAF5] font-bold text-[#2D3A5C]">{post.title}</td>
+                  <td className="px-3.5 py-2 border-b border-[#E2EAF5] text-[#2D3A5C]">
+                    {post.isCarousel ? 'Carrusel' : 'Post'}
+                  </td>
+                  <td className="px-3.5 py-2 border-b border-[#E2EAF5] text-[#2D3A5C]">
+                    {post.fileNames.join(', ')}
+                  </td>
+                  <td className="px-3.5 py-2 border-b border-[#E2EAF5] text-[#2D3A5C]">{post.dateShort}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {posts.map((post, i) => (
-                  <tr key={post.id} className="even:bg-[#F8FAFE]">
-                    <td className="px-3.5 py-2 border-b border-[#E2EAF5] text-[#2D3A5C]">{i + 1}</td>
-                    <td className="px-3.5 py-2 border-b border-[#E2EAF5] font-bold text-[#2D3A5C]">{post.title || `Publicación ${i+1}`}</td>
-                    <td className={`px-3.5 py-2 border-b border-[#E2EAF5] font-bold ${post.isPost ? 'text-[#1A6B3C]' : 'text-[#CBD5E1]'}`}>{post.isPost ? '✓' : '—'}</td>
-                    <td className={`px-3.5 py-2 border-b border-[#E2EAF5] font-bold ${post.isStory ? 'text-[#1A6B3C]' : 'text-[#CBD5E1]'}`}>{post.isStory ? '✓' : '—'}</td>
-                    <td className={`px-3.5 py-2 border-b border-[#E2EAF5] font-bold ${post.isAd ? 'text-[#1A6B3C]' : 'text-[#CBD5E1]'}`}>{post.isAd ? '✓' : '—'}</td>
-                    <td className="px-3.5 py-2 border-b border-[#E2EAF5] text-[#2D3A5C]">{post.dateShort}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 };
